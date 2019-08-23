@@ -7,6 +7,7 @@ provider "aws" {
 terraform {
    backend "s3" {
    bucket = "rc-tf-remote-state-bucket"
+     #key is already removed
    region = "us-east-1"
   }
 }
