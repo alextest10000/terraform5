@@ -1,0 +1,228 @@
+harnessApiVersion: '1.0'
+type: ROLLING
+envName: dev-env
+failureStrategies:
+- executionScope: WORKFLOW
+  failureTypes:
+  - APPLICATION_ERROR
+  repairActionCode: ROLLBACK_WORKFLOW
+  retryCount: 0
+notificationRules:
+- conditions:
+  - FAILED
+  executionScope: WORKFLOW
+  notificationGroupAsExpression: false
+  userGroupAsExpression: false
+  userGroupIds:
+  - tSS6OKRcRr2JMVRcuzTDOw
+phases:
+- type: SSH
+  computeProviderName: cs-bootcamp
+  daemonSet: false
+  infraMappingName: alex-serv-inf-worker1-dev
+  name: Phase 1
+  phaseSteps:
+  - type: INFRASTRUCTURE_NODE
+    name: Prepare Infra
+    steps:
+    - type: ROLLING_NODE_SELECT
+      name: Select Nodes
+      properties:
+        instanceCount: 1
+        excludeSelectedHostsFromFuturePhases: true
+        specificHosts: false
+    stepsInParallel: false
+  - type: DISABLE_SERVICE
+    name: Disable Service
+    stepsInParallel: false
+  - type: DEPLOY_SERVICE
+    name: Deploy Service
+    steps:
+    - type: COMMAND
+      name: Install
+      properties:
+        commandName: Install
+    - type: SHELL_SCRIPT
+      name: Shell Script
+      properties:
+        sweepingOutputScope: WORKFLOW
+        templateUuid: null
+        publishAsVar: true
+        scriptType: BASH
+        scriptString: |-
+          echo "overriding service variable ${serviceVariable.deployment}"
+          export deployment="rolling"
+          echo "now the variable is  ${serviceVariable.deployment}"
+        timeoutMillis: 600000
+        templateVersion: null
+        connectionType: SSH
+        executeOnDelegate: true
+        sweepingOutputName: deployment
+        templateVariables: null
+    stepsInParallel: false
+  - type: ENABLE_SERVICE
+    name: Enable Service
+    stepsInParallel: false
+  - type: VERIFY_SERVICE
+    name: Verify Service
+    steps:
+    - type: SHELL_SCRIPT
+      name: Shell Script_2
+      properties:
+        publishAsVar: false
+        scriptType: BASH
+        scriptString: echo "${deployment}"
+        timeoutMillis: 600000
+        connectionType: SSH
+        executeOnDelegate: true
+    stepsInParallel: false
+  - type: WRAP_UP
+    name: Wrap Up
+    steps:
+    - type: SHELL_SCRIPT
+      name: Shell Script
+      properties:
+        templateUuid: null
+        publishAsVar: false
+        scriptType: BASH
+        scriptString: echo "${deployment}"
+        timeoutMillis: 600000
+        templateVersion: null
+        connectionType: SSH
+        executeOnDelegate: true
+        templateVariables: null
+    stepsInParallel: false
+  provisionNodes: false
+  serviceName: Alex-Todo-List
+  statefulSet: false
+  templateExpressions:
+  - expression: ${Service}
+    fieldName: serviceId
+    metadata:
+    - name: artifactType
+      value: WAR
+    - name: relatedField
+      value: ${ServiceInfra_SSH}
+    - name: entityType
+      value: SERVICE
+  - expression: ${ServiceInfra_SSH}
+    fieldName: infraMappingId
+    metadata:
+    - name: artifactType
+      value: WAR
+    - name: relatedField
+    - name: entityType
+      value: INFRASTRUCTURE_MAPPING
+preDeploymentSteps:
+- type: ARTIFACT_CHECK
+  name: Artifact Check
+rollbackPhases:
+- type: SSH
+  computeProviderName: cs-bootcamp
+  daemonSet: false
+  infraMappingName: alex-serv-inf-worker1-dev
+  name: Rollback Phase 1
+  phaseNameForRollback: Phase 1
+  phaseSteps:
+  - type: DISABLE_SERVICE
+    name: Disable Service
+    phaseStepNameForRollback: Enable Service
+    statusForRollback: SUCCESS
+    stepsInParallel: false
+  - type: STOP_SERVICE
+    name: Stop Service
+    phaseStepNameForRollback: Deploy Service
+    statusForRollback: SUCCESS
+    steps:
+    - type: COMMAND
+      name: Stop
+      properties:
+        commandName: Stop
+    stepsInParallel: false
+  - type: DEPLOY_SERVICE
+    name: Deploy Service
+    phaseStepNameForRollback: Deploy Service
+    statusForRollback: SUCCESS
+    steps:
+    - type: COMMAND
+      name: Install
+      properties:
+        commandName: Install
+    stepsInParallel: false
+  - type: ENABLE_SERVICE
+    name: Enable Service
+    phaseStepNameForRollback: Disable Service
+    statusForRollback: SUCCESS
+    stepsInParallel: false
+  - type: VERIFY_SERVICE
+    name: Verify Service
+    phaseStepNameForRollback: Deploy Service
+    statusForRollback: SUCCESS
+    stepsInParallel: false
+  - type: WRAP_UP
+    name: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  serviceName: Alex-Todo-List
+  statefulSet: false
+  templateExpressions:
+  - expression: ${Service}
+    fieldName: serviceId
+    metadata:
+    - name: artifactType
+      value: WAR
+    - name: relatedField
+      value: ${ServiceInfra_SSH}
+    - name: entityType
+      value: SERVICE
+  - expression: ${ServiceInfra_SSH}
+    fieldName: infraMappingId
+    metadata:
+    - name: artifactType
+      value: WAR
+    - name: relatedField
+    - name: entityType
+      value: INFRASTRUCTURE_MAPPING
+templateExpressions:
+- expression: ${Environment}
+  fieldName: envId
+  metadata:
+  - name: artifactType
+    value: WAR
+  - name: relatedField
+  - name: entityType
+    value: ENVIRONMENT
+- expression: ${Service}
+  fieldName: serviceId
+  metadata:
+  - name: artifactType
+    value: WAR
+  - name: relatedField
+    value: ${ServiceInfra_SSH}
+  - name: entityType
+    value: SERVICE
+- expression: ${ServiceInfra_SSH}
+  fieldName: infraMappingId
+  metadata:
+  - name: artifactType
+    value: WAR
+  - name: relatedField
+  - name: entityType
+    value: INFRASTRUCTURE_MAPPING
+templatized: true
+userVariables:
+- type: ENTITY
+  description: Variable for Environment entity
+  fixed: false
+  mandatory: true
+  name: Environment
+- type: ENTITY
+  description: Variable for Service entity in Rollback Phase 1
+  fixed: false
+  mandatory: true
+  name: Service
+- type: ENTITY
+  description: Variable for Service Infra-structure entity in Rollback Phase 1
+  fixed: false
+  mandatory: true
+  name: ServiceInfra_SSH

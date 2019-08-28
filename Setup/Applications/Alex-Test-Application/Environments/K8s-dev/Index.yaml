@@ -1,0 +1,4 @@
+harnessApiVersion: '1.0'
+type: ENVIRONMENT
+description: Kubernetes dev environment
+environmentType: NON_PROD

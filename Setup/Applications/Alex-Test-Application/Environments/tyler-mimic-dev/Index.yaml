@@ -1,0 +1,10 @@
+harnessApiVersion: '1.0'
+type: ENVIRONMENT
+environmentType: NON_PROD
+variableOverrides:
+- name: alexvar2
+  value: xyz
+  valueType: TEXT
+- name: ConfigurationServer__uri
+  value: http://consul:8500
+  valueType: TEXT

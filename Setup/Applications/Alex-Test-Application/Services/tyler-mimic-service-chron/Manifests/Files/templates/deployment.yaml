@@ -1,0 +1,19 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: tp-batchservice-job
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: tp-batchservice-job
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: {{.Values.name}}
+            image: {{.Values.image}}
+          imagePullSecrets:
+          - name: tylerorg
